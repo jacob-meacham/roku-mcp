@@ -61,9 +61,7 @@ class TestSpecificUrls:
         assert result.media_type == "series"
 
     def test_disney_plus(self) -> None:
-        result = convert_url_to_ecp_command(
-            "https://www.disneyplus.com/play/f63db666-b097-4c61-99c1-b778de2d4ae1"
-        )
+        result = convert_url_to_ecp_command("https://www.disneyplus.com/play/f63db666-b097-4c61-99c1-b778de2d4ae1")
         assert result is not None
         assert result.channel_id == "291097"
         assert result.post_launch_key == "Select"
