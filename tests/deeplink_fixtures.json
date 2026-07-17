@@ -235,6 +235,33 @@
           {"type": "keypress", "key": "Select", "count": 1}
         ]
       }
+    },
+    {
+      "input": {
+        "channel_id": "44191",
+        "channel_name": "Emby",
+        "content_id": "3f9a1c"
+      },
+      "expected": {
+        "type": "action_sequence",
+        "actions": [
+          {"type": "launch", "channel_id": "44191", "params": "Command=PlayNow&ItemIds=3f9a1c"}
+        ]
+      }
+    },
+    {
+      "input": {
+        "channel_id": "44191",
+        "channel_name": "Emby",
+        "content_id": "3f9a1c",
+        "resume_position_ticks": 12000000000
+      },
+      "expected": {
+        "type": "action_sequence",
+        "actions": [
+          {"type": "launch", "channel_id": "44191", "params": "Command=PlayNow&ItemIds=3f9a1c&StartPositionTicks=12000000000"}
+        ]
+      }
     }
   ]
 }
