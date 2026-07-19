@@ -3,6 +3,7 @@
 import httpx
 import pytest
 
+from roku_mcp.deeplink import ExtractionResult
 from roku_mcp.ecp_client import ECPError, RokuECPClient
 
 from .conftest import ACTIVE_APP_XML, APPS_XML, DEVICE_INFO_XML, MEDIA_PLAYER_XML
@@ -96,6 +97,44 @@ class TestLaunch:
 
     async def test_launch_with_deep_link(self, ecp_client: RokuECPClient) -> None:
         await ecp_client.launch("12", content_id="81444554", media_type="movie")
+
+
+@pytest.mark.asyncio
+class TestLaunchWithDeeplink:
+    """The live playback path builds a Function 2 action sequence and executes it."""
+
+    async def test_executes_launch_wait_keypress(self) -> None:
+        requests: list[httpx.Request] = []
+        sleeps: list[float] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            return httpx.Response(200)
+
+        async def _recording_sleep(seconds: float) -> None:
+            sleeps.append(seconds)
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        ecp_client = RokuECPClient("192.168.1.100", client, sleep=_recording_sleep)
+
+        extraction = ExtractionResult(
+            channel_id="12",
+            channel_name="Netflix",
+            content_id="81444554",
+            media_type="movie",
+            post_launch_key="Play",
+        )
+        await ecp_client.launch_with_deeplink(extraction)
+
+        # launch (with deep-link params) → wait 2000ms → keypress, in order.
+        assert [(r.method, r.url.path) for r in requests] == [
+            ("POST", "/launch/12"),
+            ("POST", "/keypress/Play"),
+        ]
+        launch = requests[0]
+        assert launch.url.params["contentId"] == "81444554"
+        assert launch.url.params["mediaType"] == "movie"
+        assert sleeps == [2.0]
 
 
 @pytest.mark.asyncio

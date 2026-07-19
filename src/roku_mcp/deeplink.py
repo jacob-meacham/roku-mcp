@@ -1,13 +1,14 @@
 """Roku ECP URL-to-Playback conversion.
 
-Generated from the ``roku-deeplink`` spec-library, version **1.2.0**, via speclib.
+Generated from the ``roku-deeplink`` spec-library, version **1.3.0**, via speclib.
 The canonical behavior lives in that library's ``SPEC.md`` / ``PROMPT.md`` /
 ``test_fixtures.json``; regenerate with ``speclib sync`` rather than editing the
 behavior here by hand.
 
-This consumer supports the four public-streaming channels the spec addresses by
-URL (Netflix, Disney+, HBO Max, Prime Video). The spec's Emby channel (``44191``)
-is descriptor-only / self-hosted and is intentionally *not* implemented here.
+This consumer supports the six public-streaming channels the spec addresses by
+URL (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+). The spec's Emby
+channel (``44191``) is descriptor-only / self-hosted and is intentionally *not*
+implemented here.
 """
 
 from __future__ import annotations
@@ -72,7 +73,24 @@ PRIME_VIDEO = Channel(
     post_launch_key="Select",
 )
 
-CHANNEL_CATALOG: tuple[Channel, ...] = (NETFLIX, DISNEY_PLUS, HBO_MAX, PRIME_VIDEO)
+HULU = Channel(
+    channel_id="2285",
+    channel_name="Hulu",
+    url_pattern=re.compile(
+        r"hulu\.com/(?:series|watch|movie)/(?:[a-z0-9-]+-)?"
+        r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
+    ),
+    post_launch_key="Select",
+)
+
+APPLE_TV_PLUS = Channel(
+    channel_id="551012",
+    channel_name="Apple TV+",
+    url_pattern=re.compile(r"tv\.apple\.com/(?:\w{2}/)?(?:show|movie|episode)/[^/]+/(umc\.cmc\.[a-z0-9]+)"),
+    post_launch_key="Select",
+)
+
+CHANNEL_CATALOG: tuple[Channel, ...] = (NETFLIX, DISNEY_PLUS, HBO_MAX, PRIME_VIDEO, HULU, APPLE_TV_PLUS)
 
 
 def _determine_media_type(url: str, channel: Channel) -> MediaType:

@@ -5,11 +5,17 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any, Literal, get_args
-from urllib.parse import quote
+from urllib.parse import parse_qsl, quote
 
 import httpx
 
-from roku_mcp.deeplink import ExtractionResult
+from roku_mcp.deeplink import (
+    ExtractionResult,
+    LaunchAction,
+    PlaybackCommand,
+    WaitAction,
+    build_playback_command,
+)
 from roku_mcp.models import ActiveApp, App, DeviceInfo, MediaPlayerStatus
 from roku_mcp.xml_parser import parse_active_app, parse_apps, parse_device_info, parse_media_player
 
@@ -143,11 +149,26 @@ class RokuECPClient:
             params["mediaType"] = media_type
         await self._post(f"/launch/{channel_id}", params=params or None)
 
+    async def execute_playback_command(self, command: PlaybackCommand) -> None:
+        """Execute a playback command's action sequence against the device.
+
+        Iterates the ``launch`` / ``wait`` / ``keypress`` actions produced by
+        the spec's ``build_playback_command`` (Function 2) and dispatches each
+        through the ECP primitives.
+        """
+        for action in command.actions:
+            if isinstance(action, LaunchAction):
+                params = dict(parse_qsl(action.params))
+                await self._post(f"/launch/{action.channel_id}", params=params or None)
+            elif isinstance(action, WaitAction):
+                await self._sleep(action.milliseconds / 1000.0)
+            else:  # KeypressAction
+                for _ in range(action.count):
+                    await self.keypress(action.key)
+
     async def launch_with_deeplink(self, extraction: ExtractionResult) -> None:
-        """Execute a full deep link playback: launch, wait, keypress."""
-        await self.launch(extraction.channel_id, extraction.content_id, extraction.media_type)
-        await self._sleep(2.0)
-        await self.keypress(extraction.post_launch_key)
+        """Execute a full deep link playback: build the action sequence (Function 2), then run it."""
+        await self.execute_playback_command(build_playback_command(extraction))
 
     async def search(self, keyword: str) -> None:
         """Open Roku search with a keyword."""
