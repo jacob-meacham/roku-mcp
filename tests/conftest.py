@@ -1,5 +1,18 @@
 """Shared test fixtures."""
 
+from pathlib import Path
+
+import pytest
+
+import roku_mcp.config
+
+
+@pytest.fixture(autouse=True)
+def _isolate_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:  # pyright: ignore[reportUnusedFunction]
+    """Keep tests hermetic: never load a developer's local config.yml."""
+    monkeypatch.setattr(roku_mcp.config, "CONFIG_FILE", tmp_path / "config.yml")
+
+
 DEVICE_INFO_XML = """\
 <device-info>
   <serial-number>YH00AA000000</serial-number>
