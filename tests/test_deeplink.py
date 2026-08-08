@@ -1,7 +1,7 @@
 """Tests for URL-to-ECP conversion and playback-command building.
 
 Validated against the canonical ``test_fixtures.json`` shipped by the
-``roku-deeplink`` spec-library (v1.3.0). Every fixture for a channel this
+``roku-deeplink`` spec-library (v1.4.0). Every fixture for a channel this
 consumer supports (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+)
 runs; only the Emby playback fixtures (channel ``44191``) are skipped, because
 roku-mcp is public-streaming only and does not implement Emby.

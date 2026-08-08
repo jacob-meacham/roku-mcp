@@ -1,6 +1,6 @@
 """Roku ECP URL-to-Playback conversion.
 
-Generated from the ``roku-deeplink`` spec-library, version **1.3.0**, via speclib.
+Generated from the ``roku-deeplink`` spec-library, version **1.4.0**, via speclib.
 The canonical behavior lives in that library's ``SPEC.md`` / ``PROMPT.md`` /
 ``test_fixtures.json``; regenerate with ``speclib sync`` rather than editing the
 behavior here by hand.
@@ -47,7 +47,7 @@ class Channel:
 NETFLIX = Channel(
     channel_id="12",
     channel_name="Netflix",
-    url_pattern=re.compile(r"netflix\.com/(?:watch|title)/(\d+)"),
+    url_pattern=re.compile(r"netflix\.com/(?:\w{2}(?:-\w{2})?/)?(?:watch|title)/(\d+)"),
     post_launch_key="Play",
     media_type_from_url=True,
 )
@@ -93,9 +93,13 @@ APPLE_TV_PLUS = Channel(
 CHANNEL_CATALOG: tuple[Channel, ...] = (NETFLIX, DISNEY_PLUS, HBO_MAX, PRIME_VIDEO, HULU, APPLE_TV_PLUS)
 
 
-def _determine_media_type(url: str, channel: Channel) -> MediaType:
-    """Netflix distinguishes movie vs series by URL path; all others are movies."""
-    if channel.media_type_from_url and "/title/" in url:
+def _determine_media_type(matched_text: str, channel: Channel) -> MediaType:
+    """Netflix distinguishes movie vs series by URL path; all others are movies.
+
+    Decided from the regex *matched text*, not the full URL — the other path
+    segment may appear elsewhere in the URL (e.g. in a query parameter).
+    """
+    if channel.media_type_from_url and "/title/" in matched_text:
         return "series"
     return "movie"
 
@@ -114,7 +118,7 @@ def convert_url_to_ecp_command(url: str) -> ExtractionResult | None:
                 channel_id=channel.channel_id,
                 channel_name=channel.channel_name,
                 content_id=match.group(1),
-                media_type=_determine_media_type(url, channel),
+                media_type=_determine_media_type(match.group(0), channel),
                 post_launch_key=channel.post_launch_key,
             )
     return None
