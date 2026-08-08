@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+.speclib
+.claude
+.pytest_cache
+.ruff_cache
+__pycache__
+**/__pycache__
+tests
+config.yml
+coverage.xml
+AGENTS.md
+CLAUDE.md
+Dockerfile
+.dockerignore
