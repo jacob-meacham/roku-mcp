@@ -1,14 +1,15 @@
 """Roku ECP URL-to-Playback conversion.
 
-Generated from the ``roku-deeplink`` spec-library, version **1.4.0**, via speclib.
+Generated from the ``roku-deeplink`` spec-library, version **1.4.1**, via speclib.
 The canonical behavior lives in that library's ``SPEC.md`` / ``PROMPT.md`` /
 ``test_fixtures.json``; regenerate with ``speclib sync`` rather than editing the
 behavior here by hand.
 
-This consumer supports the six public-streaming channels the spec addresses by
-URL (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+). The spec's Emby
-channel (``44191``) is descriptor-only / self-hosted and is intentionally *not*
-implemented here.
+This consumer supports the seven public-streaming channels the spec addresses by
+URL (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+, YouTube). YouTube
+is launch-only: its extraction result carries no ``post_launch_key`` and its
+playback command is a bare ``launch``. The spec's Emby channel (``44191``) is
+descriptor-only / self-hosted and is intentionally *not* implemented here.
 """
 
 from __future__ import annotations
@@ -24,23 +25,31 @@ PostLaunchKey = Literal["Play", "Select"]
 
 @dataclass(frozen=True)
 class ExtractionResult:
-    """A content descriptor extracted from a streaming URL (output of Function 1)."""
+    """A content descriptor extracted from a streaming URL (output of Function 1).
+
+    ``post_launch_key`` is ``None`` for launch-only channels (YouTube), whose
+    deep link starts playback without a keypress.
+    """
 
     channel_id: str
     channel_name: str
     content_id: str
     media_type: MediaType
-    post_launch_key: PostLaunchKey
+    post_launch_key: PostLaunchKey | None = None
 
 
 @dataclass(frozen=True)
 class Channel:
-    """A streaming service channel configuration."""
+    """A streaming service channel configuration.
+
+    ``post_launch_key`` is ``None`` for launch-only channels whose deep link
+    auto-plays (YouTube).
+    """
 
     channel_id: str
     channel_name: str
     url_pattern: re.Pattern[str]
-    post_launch_key: PostLaunchKey
+    post_launch_key: PostLaunchKey | None
     media_type_from_url: bool = False
 
 
@@ -90,7 +99,19 @@ APPLE_TV_PLUS = Channel(
     post_launch_key="Select",
 )
 
-CHANNEL_CATALOG: tuple[Channel, ...] = (NETFLIX, DISNEY_PLUS, HBO_MAX, PRIME_VIDEO, HULU, APPLE_TV_PLUS)
+YOUTUBE = Channel(
+    channel_id="837",
+    channel_name="YouTube",
+    # Captures the 11-char video ID from a `v=` query param (the only channel
+    # capturing from a query, not the path) or a youtu.be short link. The
+    # `(?:[^#\s]*&)?` lets `v` follow other params while a preceding param name
+    # can't bleed in (`sv=` never matches); the strict {11} class rejects
+    # malformed IDs and stops before `?si=` tracking params.
+    url_pattern=re.compile(r"(?:youtube\.com/watch\?(?:[^#\s]*&)?v=|youtu\.be/)([A-Za-z0-9_-]{11})"),
+    post_launch_key=None,
+)
+
+CHANNEL_CATALOG: tuple[Channel, ...] = (NETFLIX, DISNEY_PLUS, HBO_MAX, PRIME_VIDEO, HULU, APPLE_TV_PLUS, YOUTUBE)
 
 
 def _determine_media_type(matched_text: str, channel: Channel) -> MediaType:

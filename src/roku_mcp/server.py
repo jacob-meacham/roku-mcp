@@ -222,7 +222,8 @@ async def play_url(
 ) -> str:
     """Auto-detect a streaming URL and deep link to play it on Roku.
 
-    Supports Netflix, Disney+, HBO Max, Prime Video, Hulu, and Apple TV+ URLs.
+    Supports Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+, and
+    YouTube (youtube.com/watch or youtu.be) URLs.
 
     Args:
         url: Streaming service URL (e.g. https://www.netflix.com/watch/81444554)

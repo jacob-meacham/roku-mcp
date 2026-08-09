@@ -1,10 +1,10 @@
 """Tests for URL-to-ECP conversion and playback-command building.
 
 Validated against the canonical ``test_fixtures.json`` shipped by the
-``roku-deeplink`` spec-library (v1.4.0). Every fixture for a channel this
-consumer supports (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+)
-runs; only the Emby playback fixtures (channel ``44191``) are skipped, because
-roku-mcp is public-streaming only and does not implement Emby.
+``roku-deeplink`` spec-library (v1.4.1). Every fixture for a channel this
+consumer supports (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+,
+YouTube) runs; only the Emby playback fixtures (channel ``44191``) are skipped,
+because roku-mcp is public-streaming only and does not implement Emby.
 """
 
 import json
@@ -40,7 +40,9 @@ class TestValidUrls:
         assert result.channel_name == expected["channel_name"], f"channel_name mismatch for {url}"
         assert result.content_id == expected["content_id"], f"content_id mismatch for {url}"
         assert result.media_type == expected["media_type"], f"media_type mismatch for {url}"
-        assert result.post_launch_key == expected["post_launch_key"], f"post_launch_key mismatch for {url}"
+        # Launch-only channels (YouTube) omit post_launch_key from the fixture;
+        # the extraction models that absence as None.
+        assert result.post_launch_key == expected.get("post_launch_key"), f"post_launch_key mismatch for {url}"
 
 
 class TestInvalidUrls:
@@ -99,8 +101,23 @@ class TestSpecificUrls:
         assert result.channel_id == "13"
         assert result.content_id == "B0DKTFF815"
 
-    def test_unsupported_url(self) -> None:
+    def test_youtube_launch_only(self) -> None:
+        result = convert_url_to_ecp_command("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        assert result is not None
+        assert result.channel_id == "837"
+        assert result.content_id == "dQw4w9WgXcQ"
+        assert result.post_launch_key is None
+        command = build_playback_command(result)
+        assert len(command.actions) == 1
+        assert command.actions[0].type == "launch"
+
+    def test_youtube_malformed_id(self) -> None:
+        # YouTube is supported, but abc123 is not a valid 11-char video ID.
         result = convert_url_to_ecp_command("https://www.youtube.com/watch?v=abc123")
+        assert result is None
+
+    def test_unsupported_url(self) -> None:
+        result = convert_url_to_ecp_command("https://open.spotify.com/track/abc")
         assert result is None
 
 
