@@ -1,6 +1,6 @@
 """Roku ECP URL-to-Playback conversion.
 
-Generated from the ``roku-deeplink`` spec-library, version **1.4.1**, via speclib.
+Generated from the ``roku-deeplink`` spec-library, version **1.5.0**, via speclib.
 The canonical behavior lives in that library's ``SPEC.md`` / ``PROMPT.md`` /
 ``test_fixtures.json``; regenerate with ``speclib sync`` rather than editing the
 behavior here by hand.
@@ -10,6 +10,10 @@ URL (Netflix, Disney+, HBO Max, Prime Video, Hulu, Apple TV+, YouTube). YouTube
 is launch-only: its extraction result carries no ``post_launch_key`` and its
 playback command is a bare ``launch``. The spec's Emby channel (``44191``) is
 descriptor-only / self-hosted and is intentionally *not* implemented here.
+
+The spec's §11 web-search sourcing guidance and the Prime Video verification
+probe (§4) are likewise not implemented: this server converts caller-supplied
+URLs and does not discover them via web search.
 """
 
 from __future__ import annotations
@@ -71,7 +75,11 @@ DISNEY_PLUS = Channel(
 HBO_MAX = Channel(
     channel_id="61322",
     channel_name="HBO Max",
-    url_pattern=re.compile(r"(?:max\.com|hbomax\.com)/(?:(?:movies|series)/[^/]+/|(?:video/watch|play)/)([^/?]+)"),
+    # /shows/{slug}/[sN/]{id} is the current site scheme; the optional season
+    # segment (s1/) means episode pages yield the same show UUID.
+    url_pattern=re.compile(
+        r"(?:max\.com|hbomax\.com)/(?:(?:movies|series|shows)/[^/]+/(?:s\d+/)?|(?:video/watch|play)/)([^/?]+)"
+    ),
     post_launch_key="Select",
 )
 
