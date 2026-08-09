@@ -104,8 +104,9 @@ Valid key names: `Home`, `Up`, `Down`, `Left`, `Right`, `Select`, `Back`, `Play`
 | Prime Video | `amazon.com/gp/video/detail/<id>` | same |
 | Hulu | `hulu.com/watch/<id>` | same |
 | Apple TV+ | `tv.apple.com/movie|show/…` | same |
+| YouTube | `youtube.com/watch?v=…`, `youtu.be/…` | Auto-plays — launch-only, no key pressed |
 
-Netflix `/watch/` URLs are treated as movies and `/title/` as series. Unsupported services (YouTube, Spotify, …) return a "could not detect" message — fall back to `launch_app` with an ID from `list_apps`, or `search_roku`.
+Netflix `/watch/` URLs are treated as movies and `/title/` as series. Unsupported services (Spotify, Twitch, …) return a "could not detect" message — fall back to `launch_app` with an ID from `list_apps`, or `search_roku`.
 
 The URL-to-ECP behavior is generated from the [roku-deeplink spec](https://github.com/jacob-meacham/roku-deeplink-spec) via speclib — fix behavior there, then `speclib sync`, rather than editing `deeplink.py`.
 

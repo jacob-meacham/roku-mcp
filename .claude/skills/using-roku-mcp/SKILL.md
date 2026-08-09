@@ -11,14 +11,14 @@ Drives Roku devices over ECP. Every tool takes an optional `device` (a name from
 
 | Goal | Tool |
 |---|---|
-| Play a Netflix / Disney+ / HBO Max / Prime Video / Hulu / Apple TV+ URL | `play_url` — that list is exhaustive |
-| Open any other app (YouTube, Spotify, …) | `list_apps` → `launch_app(channel_id)` — never guess channel IDs; only installed channels are launchable |
+| Play a Netflix / Disney+ / HBO Max / Prime Video / Hulu / Apple TV+ / YouTube URL | `play_url` — that list is exhaustive |
+| Open any other app (Spotify, Twitch, …) | `list_apps` → `launch_app(channel_id)` — never guess channel IDs; only installed channels are launchable |
 | Find content when you have no URL | `search_roku(keyword)` — opens Roku's cross-channel search UI |
 | Enter text (search box, login) | `type_text` — only works while a text field has focus; follow with `Enter` or navigate to the on-screen submit button |
 
 ## Non-obvious behaviors
 
-- **`play_url` already presses the post-launch key for you**: `Play` on Netflix (starts immediately), `Select` on every other service (dismisses the profile picker). Don't send it again blindly — a second press can pause playback or change profile.
+- **`play_url` already presses the post-launch key for you**: `Play` on Netflix (starts immediately), `Select` on the other services (dismisses the profile picker). YouTube needs no key at all — its deep link auto-plays. Don't send a key again blindly — a second press can pause playback or change profile.
 - **Verify, then intervene**: after any launch, call `get_media_player_status`. `state: "play"` with advancing position = success. `state: "close"` or stuck = the app is on a UI screen; only then navigate with `send_keypress`.
 - **There is no Pause key** — `Play` is the play/pause toggle.
 - **Netflix URLs**: `/watch/<id>` = movie (plays directly), `/title/<id>` = series (may land on the episode list; press `Select` to play the highlighted episode).
@@ -33,7 +33,7 @@ Drives Roku devices over ECP. Every tool takes an optional `device` (a name from
 
 | Mistake | Instead |
 |---|---|
-| `play_url` with a YouTube/unsupported URL | `list_apps` → `launch_app`, or `search_roku` |
+| `play_url` with an unsupported URL (Spotify, Twitch, …) | `list_apps` → `launch_app`, or `search_roku` |
 | Hardcoding channel IDs from memory | Read them from `list_apps` (IDs vary; only installed apps launch) |
 | Pressing `Select`/`Play` right after `play_url` | Check `get_media_player_status` first — the server already sent the post-launch key |
 | `type_text` with no field focused | Open the keyboard first (e.g. via `search_roku`), then type |
